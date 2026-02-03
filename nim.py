@@ -2,7 +2,6 @@ import math
 import random
 import time
 
-
 class Nim():
 
     def __init__(self, initial=[1, 3, 5, 7]):
@@ -69,7 +68,6 @@ class Nim():
         if all(pile == 0 for pile in self.piles):
             self.winner = self.player
 
-
 class NimAI():
 
     def __init__(self, alpha=0.5, epsilon=0.1):
@@ -101,7 +99,7 @@ class NimAI():
         Return the Q-value for the state `state` and the action `action`.
         If no Q-value exists yet in `self.q`, return 0.
         """
-        raise NotImplementedError
+        return self.q.get((tuple(state), action), 0)
 
     def update_q_value(self, state, action, old_q, reward, future_rewards):
         """
@@ -118,7 +116,8 @@ class NimAI():
         `alpha` is the learning rate, and `new value estimate`
         is the sum of the current reward and estimated future rewards.
         """
-        raise NotImplementedError
+        new_value = reward + future_rewards
+        self.q[(tuple(state), action)] = old_q + self.alpha * (new_value - old_q)
 
     def best_future_reward(self, state):
         """
@@ -130,7 +129,18 @@ class NimAI():
         Q-value in `self.q`. If there are no available actions in
         `state`, return 0.
         """
-        raise NotImplementedError
+        a = Nim.available_actions(state)  
+
+        if len(a) == 0:
+            return 0
+        
+        else:
+            best_q = 0
+            for action in a:
+                q_value = self.get_q_value(state, action)
+                best_q = max(best_q, q_value)
+            
+            return best_q
 
     def choose_action(self, state, epsilon=True):
         """
@@ -147,8 +157,27 @@ class NimAI():
         If multiple actions have the same Q-value, any of those
         options is an acceptable return value.
         """
-        raise NotImplementedError
+        available_actions = list(Nim.available_actions(state))
 
+        # If epsilon is true, decide to explore or exploit
+        if epsilon and random.random() < self.epsilon:
+            # Explore a random action
+            return random.choice(available_actions)
+        else:
+            # Exploit the best action based on Q values
+            best_actions = []
+            best_q = float("-inf")
+
+            for action in available_actions:
+                q_value = self.get_q_value(state, action)
+                if q_value > best_q:
+                    best_q = q_value
+                    best_actions = [action]
+                elif q_value == best_q:
+                    best_actions.append(action)
+            
+            # Return one of the best actions
+            return random.choice(best_actions)
 
 def train(n):
     """
@@ -207,7 +236,6 @@ def train(n):
 
     # Return the trained AI
     return player
-
 
 def play(ai, human_player=None):
     """
