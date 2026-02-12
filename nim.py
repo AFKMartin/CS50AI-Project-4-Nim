@@ -135,7 +135,7 @@ class NimAI():
             return 0
         
         else:
-            best_q = 0
+            best_q = float('-inf')
             for action in a:
                 q_value = self.get_q_value(state, action)
                 best_q = max(best_q, q_value)
